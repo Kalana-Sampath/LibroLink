@@ -1,236 +1,286 @@
-import React, { useState } from 'react';
-import {
-    Text,
-    View,
-    StyleSheet,
-    TouchableOpacity,
-    Modal,
-    TextInput,
-    Button,
-    Alert,
-    FlatList,
-    Image,
-} from "react-native";
-import { FontAwesome } from '@expo/vector-icons';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, BackHandler, Image } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
-import { Picker } from '@react-native-picker/picker';
+import * as ImagePicker from 'expo-image-picker';
+import { MaterialIcons } from '@expo/vector-icons';
 
-function MyList() {
-    const [modalVisible, setModalVisible] = useState(false);
-    const [bookTitle, setBookTitle] = useState('');
-    const [price, setPrice] = useState('');
-    const [selectedOption, setSelectedOption] = useState('buy');
-    const [coverImage, setCoverImage] = useState(null);
-    const [books, setBooks] = useState([]);
+const MyList = () => {
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [name, setName] = useState('');
+  const [author, setAuthor] = useState('');
+  const [type, setType] = useState('buy');
+  const [file, setFile] = useState(null);
+  const [coverImage, setCoverImage] = useState(null);
 
-    // Function to pick cover image
-    const pickCoverImage = async () => {
-        try {
-            const result = await DocumentPicker.getDocumentAsync({
-                type: "image/*", // Restrict to image types
-            });
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (isModalVisible) {
+        setIsModalVisible(false);
+        return true;
+      }
+      return false;
+    });
 
-            if (result.type !== 'cancel') {
-                setCoverImage(result);
-            }
-        } catch (error) {
-            console.log("Error picking image: ", error);
-            Alert.alert("Error", "Failed to select an image.");
-        }
-    };
+    return () => backHandler.remove();
+  }, [isModalVisible]);
 
-    // Function to add the book
-    const addBook = () => {
-        if (!bookTitle || !price || !coverImage) {
-            Alert.alert("Error", "Please fill all fields and select a cover image.");
-            return;
-        }
+  const handleAddBook = () => {
+    const book = { name, author, type, file, coverImage };
+    console.log('Book added:', book);
+    setIsModalVisible(false);
+    setName('');
+    setAuthor('');
+    setType('buy');
+    setFile(null);
+    setCoverImage(null);
+  };
 
-        const parsedPrice = parseFloat(price);
-        if (isNaN(parsedPrice) || parsedPrice <= 0) {
-            Alert.alert("Error", "Price must be a positive number.");
-            return;
-        }
+  const pickDocument = async () => {
+    try {
+      const res = await DocumentPicker.getDocumentAsync({
+        type: 'application/pdf',
+      });
 
-        const newBook = {
-            id: Math.random().toString(), // Generate a unique ID
-            title: bookTitle,
-            price: parsedPrice.toFixed(2), // Format the price to 2 decimal places
-            option: selectedOption,
-            coverImage: coverImage.uri, // Store the URI of the selected image
-        };
+      console.log('Document Picker Result:', res);
 
-        setBooks((prevBooks) => [...prevBooks, newBook]);
-        setModalVisible(false);
-        setBookTitle('');
-        setPrice('');
-        setSelectedOption('buy');
-        setCoverImage(null); // Reset cover image
-        Alert.alert("Success", "Book added successfully!");
-    };
+      if (!res.canceled) {
+        const file = res.assets[0];
+        setFile(file);
+        console.log('File selected:', file);
+      } else {
+        console.log('User cancelled the document picker');
+      }
+    } catch (err) {
+      console.error('Error picking document:', err);
+    }
+  };
 
-    return (
-        <View style={styles.subPageContainer}>
-            <Text style={styles.subPageText}>My List</Text>
+  const pickCoverImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
 
-            <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-                <View style={styles.addButtonIcon}>
-                    <FontAwesome name="plus" size={24} color="white" />
+      if (!result.canceled) {
+        setCoverImage(result.assets[0].uri);
+      }
+    } catch (err) {
+      console.error('Error picking image:', err);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.pageTitle}>My List</Text>
+
+      {/* Replace the + button with an image */}
+      <TouchableOpacity style={styles.addButton} onPress={() => setIsModalVisible(true)}>
+        <Image
+          source={{ uri: 'https://cdn2.iconfinder.com/data/icons/user-interface-presicon-flat/64/add-512.png' }}
+          style={styles.addButtonImage}
+        />
+      </TouchableOpacity>
+
+      <Modal visible={isModalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalHeader}>Add Book</Text>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Book Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter book name"
+                placeholderTextColor="#999"
+                value={name}
+                onChangeText={setName}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Author Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter author name"
+                placeholderTextColor="#999"
+                value={author}
+                onChangeText={setAuthor}
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Cover Image</Text>
+              <TouchableOpacity style={styles.coverImageButton} onPress={pickCoverImage}>
+                <Text style={styles.coverImageButtonText}>Select Cover Image</Text>
+              </TouchableOpacity>
+              {coverImage && (
+                <View style={styles.coverImageContainer}>
+                  <Image source={{ uri: coverImage }} style={styles.coverImage} />
                 </View>
-            </TouchableOpacity>
+              )}
+            </View>
 
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Add Book</Text>
-
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Book Title"
-                            value={bookTitle}
-                            onChangeText={setBookTitle}
-                        />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Price"
-                            value={price}
-                            keyboardType="numeric"
-                            onChangeText={setPrice}
-                        />
-
-                        <Picker
-                            selectedValue={selectedOption}
-                            style={styles.picker}
-                            onValueChange={(itemValue) => setSelectedOption(itemValue)}
-                        >
-                            <Picker.Item label="Buy" value="buy" />
-                            <Picker.Item label="Exchange" value="exchange" />
-                        </Picker>
-
-                        <TouchableOpacity style={styles.uploadButton} onPress={pickCoverImage}>
-                            <Text style={styles.uploadButtonText}>
-                                {coverImage ? `Selected: ${coverImage.name}` : 'Upload Cover Image'}
-                            </Text>
-                        </TouchableOpacity>
-
-                        <Button title="Add Book" onPress={addBook} color="green" />
-                        <Button title="Close" onPress={() => setModalVisible(false)} color="red" />
-                    </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>PDF File</Text>
+              <TouchableOpacity style={styles.pdfButton} onPress={pickDocument}>
+                <Text style={styles.pdfButtonText}>Pick PDF</Text>
+              </TouchableOpacity>
+              {file && (
+                <View style={styles.pdfContainer}>
+                  <MaterialIcons name="picture-as-pdf" size={24} color="#ff0000" />
+                  <Text style={styles.pdfName}>{file.name}</Text>
                 </View>
-            </Modal>
+              )}
+            </View>
 
-            <FlatList
-                data={books}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.bookItem}>
-                        <Text style={styles.bookText}>{item.title}</Text>
-                        <Text style={styles.bookText}>Price: ${item.price}</Text>
-                        <Text style={styles.bookText}>Option: {item.option}</Text>
-                        <Image 
-                            source={{ uri: item.coverImage }} 
-                            style={styles.coverImage} 
-                        />
-                    </View>
-                )}
-            />
+            {/* Centered Add Book Button */}
+            <View style={styles.addBookButtonContainer}>
+              <TouchableOpacity style={styles.addBookButton} onPress={handleAddBook}>
+                <Text style={styles.addBookButtonText}>Add Book</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-    );
-}
-
-export default MyList;
+      </Modal>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
-    subPageContainer: {
-        flex: 1,
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-        padding: 20,
-    },
-    subPageText: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-    },
-    input: {
-        width: '100%',
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 5,
-        padding: 10,
-        marginVertical: 10,
-    },
-    addButton: {
-        position: 'absolute',
-        bottom: 70,
-        alignSelf: 'center',
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: 'green',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#000',
-    },
-    addButtonIcon: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalContent: {
-        width: '80%',
-        backgroundColor: 'white',
-        borderRadius: 10,
-        padding: 20,
-        alignItems: 'center',
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 20,
-    },
-    picker: {
-        height: 50,
-        width: '100%',
-    },
-    uploadButton: {
-        marginVertical: 10,
-        padding: 10,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 5,
-        width: '100%',
-        alignItems: 'center',
-        backgroundColor: '#f0f0f0',
-    },
-    uploadButtonText: {
-        color: 'blue',
-    },
-    bookItem: {
-        padding: 10,
-        marginVertical: 5,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 5,
-        width: '100%',
-    },
-    bookText: {
-        fontSize: 16,
-    },
-    coverImage: {
-        width: 100,
-        height: 150,
-        marginTop: 10,
-    },
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#f5f5f5',
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  addButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 80, // Increased width
+    height: 100, // Increased height
+    justifyContent: 'center',
+    alignItems: 'center',
+    // Removed elevation
+  },
+  addButtonImage: {
+    width: 100, // Increased size of the plus icon
+    height: 75, // Increased size of the plus icon
+    resizeMode: 'contain', // Ensure the image fits within the container
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '90%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    elevation: 5,
+  },
+  modalHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  inputContainer: {
+    marginBottom: 15,
+  },
+  label: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
+  },
+  input: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    backgroundColor: '#fff',
+    fontSize: 16,
+    color: '#333',
+  },
+  coverImageButton: {
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#00bfff',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  coverImageButtonText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  coverImageContainer: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  coverImage: {
+    width: 150,
+    height: 150,
+    borderRadius: 5,
+  },
+  pdfButton: {
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#00bfff',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  pdfButtonText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  pdfContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  pdfName: {
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 10,
+  },
+  addBookButtonContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  addBookButton: {
+    height: 45,
+    width: 276,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#a3d949',
+    borderRadius: 20,
+  },
+  addBookButtonText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
 });
+
+export default MyList;
