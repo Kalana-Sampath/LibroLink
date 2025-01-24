@@ -16,7 +16,7 @@ const Exchange = () => {
       {/* Add Button */}
       <TouchableOpacity style={styles.addButton} >
         <View style={styles.addButtonIcon}>
-          <FontAwesome name="plus" size={24} color="black" />
+          <FontAwesome name="plus" size={24} color="white" />
         </View>
       </TouchableOpacity>
 
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#a3d949',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,

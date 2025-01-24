@@ -32,7 +32,7 @@ function RegisterPage() {
 
         if (userName && contactNo && password && confirmPassword) {
             axios
-                .post('http://10.160.92.184:5001/register', userData)
+                .post('http://192.168.8.116:5001/register', userData)
                 .then(res => {
                     console.log(res.data);
                     if (res.data.status === "ok") {

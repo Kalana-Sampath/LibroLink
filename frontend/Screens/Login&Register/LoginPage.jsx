@@ -21,7 +21,7 @@ function LoginPage({props}) {
       password: password,
     }
     axios
-      .post('http://10.160.92.184:5001/login-user', userData)
+      .post('http://192.168.8.116:5001/login-user', userData)
       .then(res => {console.log(res.data);
         if(res.data.status == "ok") {
           Alert.alert('Logged In Successfull');
