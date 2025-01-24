@@ -89,19 +89,6 @@ function MyList() {
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Add Book</Text>
 
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Book Title"
-                            value={bookTitle}
-                            onChangeText={setBookTitle}
-                        />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Price"
-                            value={price}
-                            keyboardType="numeric"
-                            onChangeText={setPrice}
-                        />
 
                         <Picker
                             selectedValue={selectedOption}
@@ -112,14 +99,8 @@ function MyList() {
                             <Picker.Item label="Exchange" value="exchange" />
                         </Picker>
 
-                        <TouchableOpacity style={styles.uploadButton} onPress={pickCoverImage}>
-                            <Text style={styles.uploadButtonText}>
-                                {coverImage ? `Selected: ${coverImage.name}` : 'Upload Cover Image'}
-                            </Text>
-                        </TouchableOpacity>
-
                         <Button title="Add Book" onPress={addBook} color="green" />
-                        <Button title="Close" onPress={() => setModalVisible(false)} color="red" />
+                        
                     </View>
                 </View>
             </Modal>
@@ -172,7 +153,7 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 30,
-        backgroundColor: 'green',
+        backgroundColor: '#a3d949',
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
