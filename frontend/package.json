@@ -20,7 +20,7 @@
     "axios": "^1.7.7",
     "expo": "^52.0.21",
     "expo-av": "~15.0.1",
-    "expo-document-picker": "~13.0.1",
+    "expo-document-picker": "~13.0.2",
     "expo-image-picker": "~16.0.3",
     "expo-status-bar": "~2.0.0",
     "frontend": "file:",
