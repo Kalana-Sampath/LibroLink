@@ -1,0 +1,166 @@
+// Assuming these are imported correctly
+const  RecommendedBooks= require('./RecommendedBooks');
+const SelfMotivationBook = require('./SelfMotivationbook');
+const Book = require('./book.model');  // If you have a general "Book" model
+
+// Create a new book (works for both categories)
+const postABook = async (req, res) => {
+  const { title, author, price, image, category, rating } = req.body;
+
+  try {
+    let newBook;
+    if (category === 'recommended') {
+      newBook = new RecommendedBooks({ title, author, price, image, rating });
+    } else if (category === 'selfmotivation') {
+      newBook = new SelfMotivationBook({ title, author, price, image, rating });
+    } else {
+      return res.status(400).send({ message: "Invalid category" });
+    }
+
+    await newBook.save();
+    res.status(201).send({ message: "Book added successfully!", data: newBook });
+  } catch (error) {
+    res.status(500).send({ message: "Error adding book", error: error.message });
+  }
+};
+
+const getAllRecommendedBooks = async (req, res) => {
+  try {
+    const books = await RecommendedBooks.find({});
+    console.log("Fetched Recommended Books:", books); 
+    res.status(200).send({ data: books });
+  } catch (error) {
+    res.status(500).send({ message: "Error fetching recommended books", error: error.message });
+  }
+};
+
+const getAllSelfMotivationBooks = async (req, res) => {
+  try {
+    const books = await SelfMotivationBook.find({});
+    res.status(200).send({ data: books });
+  } catch (error) {
+    res.status(500).send({ message: "Error fetching self-motivation books", error: error.message });
+  }
+};
+
+
+// Get a single book by ID
+const getSingleBook = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const book = await RecommendedBooks.findById(id) || await SelfMotivationBook.findById(id);
+    if (!book) {
+      return res.status(404).send({ message: "Book not found" });
+    }
+    res.status(200).send({ data: book });
+  } catch (error) {
+    res.status(500).send({ message: "Error fetching book", error: error.message });
+  }
+};
+
+// Update a book by ID
+ const updateBook = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const book = await RecommendedBooks.findById(id) || await SelfMotivationBook.findById(id);
+    if (!book) {
+      return res.status(404).send({ message: "Book not found" });
+    }
+
+    Object.assign(book, req.body); // Update the book's properties with the new data
+    await book.save();
+    res.status(200).send({ message: "Book updated successfully", data: book });
+  } catch (error) {
+    res.status(500).send({ message: "Error updating book", error: error.message });
+  }
+};
+
+// Delete a book by ID
+const deleteBook = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const book = await RecommendedBooks.findByIdAndDelete(id) || await SelfMotivationBook.findByIdAndDelete(id);
+    if (!book) {
+      return res.status(404).send({ message: "Book not found" });
+    }
+    res.status(200).send({ message: "Book deleted successfully" });
+  } catch (error) {
+    res.status(500).send({ message: "Error deleting book", error: error.message });
+  }
+};
+
+// Optionally, you can include the generic Book functions as well (if you want them to be used):
+// For example, for the Book model, the code would be similar to what's above.
+const getAllBooksGeneric = async (req, res) => {
+  try {
+    const books = await Book.find().sort({ createdAt: -1 }).select("_id title author price image rating");
+    res.status(200).send(books);
+  } catch (error) {
+    console.error("Error fetching books", error);
+    res.status(500).send({ message: "Failed to fetch books" });
+  }
+};
+
+const getSingleBookGeneric = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const book = await Book.findById(id);
+    if (!book) {
+      res.status(404).send({ message: "Book not found" });
+    }
+    res.status(200).send(book);
+  } catch (error) {
+    console.error("Error fetching book", error);
+    res.status(500).send({ message: "Failed to fetch book" });
+  }
+};
+
+const updateBookGeneric = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedBook = await Book.findByIdAndUpdate(id, req.body, { new: true });
+    if (!updatedBook) {
+      res.status(404).send({ message: "Book is not Found" });
+    }
+    res.status(200).send({
+      message: "Book updated successfully",
+      book: updatedBook,
+    });
+  } catch (error) {
+    console.error("Error updating book", error);
+    res.status(500).send({ message: "Failed to update book" });
+  }
+};
+
+const deleteBookGeneric = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedBook = await Book.findByIdAndDelete(id);
+    if (!deletedBook) {
+      res.status(404).send({ message: "Book not found!" });
+    }
+    res.status(200).send({
+      message: "Book deleted successfully",
+      book: deletedBook,
+    });
+  } catch (error) {
+    console.error("Error deleting a book", error);
+    res.status(500).send({ message: "Failed to delete a book" });
+  }
+};
+
+module.exports = {
+  postABook,
+  getAllRecommendedBooks,
+  getAllSelfMotivationBooks,
+  getSingleBook,
+  updateBook,
+  deleteBook,
+  getAllBooksGeneric,   // If ne
+  getSingleBookGeneric,  // If needed
+  updateBookGeneric,     // If needed
+  deleteBookGeneric,     // If needed
+}; 
