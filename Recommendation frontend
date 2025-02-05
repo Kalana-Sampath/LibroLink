@@ -1,0 +1,184 @@
+import React, { useState } from 'react';
+import { 
+  View, Text, Image, TextInput, StyleSheet, 
+  ScrollView, TouchableOpacity, Modal 
+} from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
+
+const Home = () => {
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const categories = [
+    {
+      id: 1,
+      name: 'Business & Finance',
+      books: [
+        { 
+          id: '1', 
+          title: 'Rich Dad Poor Dad', 
+          author: 'Robert T. Kiyosaki', 
+          price: 'Rs: 230.00', 
+          image: 'https://m.media-amazon.com/images/I/81bsw6fnUiL.jpg', 
+          description: 'Rich Dad Poor Dad advocates financial literacy, independence, and wealth-building through investing in assets, real estate, and owning businesses.' 
+        },
+        { 
+          id: '2', 
+          title: 'Zero to One', 
+          author: 'Peter Thiel', 
+          price: 'Rs: 200.00', 
+          image: 'https://m.media-amazon.com/images/I/71m-MxdJ2WL.jpg', 
+          description: 'Zero to One provides insights on startups, innovation, and the importance of creating something truly new rather than improving existing ideas.' 
+        },
+        { 
+          id: '3', 
+          title: 'The Lean Startup', 
+          author: 'Eric Ries', 
+          price: 'Rs: 280.00', 
+          image: 'https://m.media-amazon.com/images/I/81-QB7nDh4L.jpg', 
+          description: 'The Lean Startup introduces a systematic approach for startups to test ideas quickly, adapt, and build successful businesses with minimal waste.' 
+        }
+      ],
+    },
+    {
+      id: 2,
+      name: 'Self-Improvement',
+      books: [
+        { 
+          id: '4', 
+          title: 'Atomic Habits', 
+          author: 'James Clear', 
+          price: 'Rs: 250.00', 
+          image: 'https://m.media-amazon.com/images/I/91bYsX41DVL.jpg', 
+          description: 'Atomic Habits teaches how small daily improvements compound into remarkable long-term success through science-backed habit formation techniques.' 
+        },
+        { 
+          id: '5', 
+          title: 'The 5 AM Club', 
+          author: 'Robin Sharma', 
+          price: 'Rs: 220.00', 
+          image: 'https://m.media-amazon.com/images/I/71zytzrg6lL.jpg', 
+          description: 'The 5 AM Club promotes waking up early to maximize productivity, enhance focus, and live a fulfilling life using the power of morning routines.' 
+        },
+        { 
+          id: '6', 
+          title: 'Think and Grow Rich', 
+          author: 'Napoleon Hill', 
+          price: 'Rs: 300.00', 
+          image: 'https://m.media-amazon.com/images/I/81QwWiDhUHL.jpg', 
+          description: 'Think and Grow Rich reveals the mindset and principles that drive financial success, based on research of the world’s most successful individuals.' 
+        }
+      ],
+    }
+  ];
+
+  const handleBookPress = (book) => {
+    setSelectedBook(book);
+  };
+
+  const closeModal = () => {
+    setSelectedBook(null);
+  };
+
+  const filteredBooks = categories.map(category => ({
+    ...category,
+    books: category.books.filter(book => 
+      book.title.toLowerCase().includes(searchQuery.toLowerCase())
+    ),
+  }));
+
+  return (
+    <View style={{ flex: 1 }}>
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <FontAwesome name="search" size={20} color="#999" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search Books"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={{ marginTop: 20 }}>
+          {filteredBooks.map((category) => (
+            <View key={category.id} style={styles.categoryContainer}>
+              <Text style={styles.categoryTitle}>{category.name}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.booksScroll}>
+                {category.books.length > 0 ? (
+                  category.books.map((book) => (
+                    <TouchableOpacity key={book.id} onPress={() => handleBookPress(book)}>
+                      <View style={styles.bookContainer}>
+                        <Image source={{ uri: book.image }} style={styles.bookImage} />
+                        <Text style={styles.bookTitle}>{book.title}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <Text style={styles.noResultsText}>No books found</Text>
+                )}
+              </ScrollView>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+
+      {selectedBook && (
+        <Modal transparent animationType="slide" visible={true}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              {/* Close Button with Icon */}
+              <TouchableOpacity onPress={closeModal} style={styles.closeIcon}>
+                <FontAwesome name="times" size={24} color="#ff0000" />
+              </TouchableOpacity>
+
+              <Image source={{ uri: selectedBook.image }} style={styles.modalImage} />
+              <Text style={styles.modalTitle}>{selectedBook.title}</Text>
+              <Text style={styles.modalAuthor}>{selectedBook.author}</Text>
+              <Text style={styles.modalPrice}>{selectedBook.price}</Text>
+              <Text style={styles.modalDescription}>{selectedBook.description}</Text>
+              
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.buyButton}>
+                  <Text style={styles.buttonText}>Buy</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.exchangeButton}>
+                  <Text style={styles.buttonText}>Exchange</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f0f0f0', borderRadius: 8, paddingHorizontal: 10, margin: 10 },
+  searchIcon: { marginRight: 8 },
+  searchInput: { flex: 1, height: 40, fontSize: 16 },
+  container: { flexGrow: 1, backgroundColor: '#fff', paddingVertical: 20 },
+  categoryContainer: { marginBottom: 20, paddingHorizontal: 15 },
+  categoryTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
+  booksScroll: { flexDirection: 'row' },
+  bookContainer: { backgroundColor: '#f9f9f9', borderRadius: 10, padding: 10, marginRight: 15, width: 150, alignItems: 'center' },
+  bookImage: { width: 120, height: 180, resizeMode: 'cover', borderRadius: 5 },
+  bookTitle: { fontSize: 14, fontWeight: 'bold', textAlign: 'center' },
+  noResultsText: { fontSize: 14, color: '#777' },
+  modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
+  modalContent: { width: 300, backgroundColor: '#fff', borderRadius: 10, padding: 20, alignItems: 'center', position: 'relative' },
+  closeIcon: { position: 'absolute', top: 10, right: 10, padding: 5 },
+  modalImage: { width: 150, height: 220, borderRadius: 5, marginBottom: 10 },
+  modalTitle: { fontSize: 18, fontWeight: 'bold' },
+  modalAuthor: { fontSize: 14, color: '#555' },
+  modalPrice: { fontSize: 16, fontWeight: 'bold', marginVertical: 5 },
+  modalDescription: { fontSize: 12, textAlign: 'center', marginBottom: 10 },
+  buttonContainer: { flexDirection: 'row', marginTop: 10 },
+  buyButton: { backgroundColor: '#28a745', padding: 10, borderRadius: 5, marginRight: 10 },
+  exchangeButton: { backgroundColor: '#007bff', padding: 10, borderRadius: 5 },
+  buttonText: { color: '#fff', fontWeight: 'bold' }
+});
+
+export default Home;
